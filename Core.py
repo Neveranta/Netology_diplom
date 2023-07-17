@@ -99,6 +99,49 @@ class VkTools:
         result = city_id['items'][0]['id']
         return result
 
+    def check_like(self,user_id, photo_id):
+        try:
+            result = self.vkapi.method('likes.isLiked',
+                                    {'type': 'photo',
+                                    'owner_id': user_id,
+                                    'item_id': photo_id,
+                                    }
+                                    )
+        except ApiError as e:
+            print(f'Ошибка = {e}')
+        result = result['liked']
+        return True if result == 1 else False
+
+    def add_like(self, user_id, photo_id):
+        if self.check_like(user_id, photo_id) is False:
+            try:
+                likes = self.vkapi.method('likes.add',
+                                           {'type': 'photo',
+                                            'owner_id': user_id,
+                                            'item_id': photo_id,
+                                            }
+                                           )
+            except ApiError as e:
+                print(f'Ошибка = {e}')
+
+            return likes
+        else:
+            return 'Данное фото уже было отмечено пользователем'
+
+    def delete_like(self, user_id, photo_id):
+        if self.check_like(user_id, photo_id) is True:
+            try:
+                likes = self.vkapi.method('likes.delete',
+                                           {'type': 'photo',
+                                            'owner_id': user_id,
+                                            'item_id': photo_id,
+                                            }
+                                           )
+            except ApiError as e:
+                print(f'Ошибка = {e}')
+            return likes
+        else:
+            return 'Данное фото не находится в списке отмеченных пользователем'
 
 if __name__ == '__main__':
     user_id = ' '
