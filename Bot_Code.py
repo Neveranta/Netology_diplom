@@ -80,6 +80,24 @@ class Test_Bot:
                             user_id,
                             f'имя:{user.name} ссылка: https://vk.com/id{user.worksheet_id}')
                     break
+
+                elif reply.text.lower().split(' ')[0] == 'like':
+                    photos = self.vk_tools.get_photos(search[0]['id'])
+                    photo = photos[(int(reply.text.lower().split(' ')[1]) - 1)]
+                    self.vk_tools.add_like(photo['owner_id'], photo['id'])
+                    self.write_msg(
+                        user_id,
+                        f'Фотография отмечена как понравившаяся\n')
+                    break
+
+                elif reply.text.lower().split(' ')[0] == 'delete':
+                    photos = self.vk_tools.get_photos(search[0]['id'])
+                    photo = photos[(int(reply.text.lower().split(' ')[1]) - 1)]
+                    self.vk_tools.delete_like(photo['owner_id'], photo['id'])
+                    self.write_msg(
+                        user_id,
+                        f'Отметка удалена')
+                    break
                 else:
                     break
 
@@ -101,6 +119,17 @@ class Test_Bot:
 
         self.await_user_answer(user_id, search)
 
+        self.write_msg(
+            user_id,
+            f'Желаете отметить фотографию?\n'
+            f'Для отметки нравится наберите like и номер фотографии по порядку\n')
+        self.await_user_answer(user_id, search)
+
+        self.write_msg(
+            user_id,
+             f'Желаете удалить отметку?'
+            f'Для удаления отметки наберите delete и номер фотографии по порядку\n')
+        self.await_user_answer(user_id, search)
 
 # Общение с пользователем
     def event_handler(self):
@@ -116,16 +145,17 @@ class Test_Bot:
                 elif event.text.lower() == 'поиск':
                     self.write_msg(
                         event.user_id, 'Начинаем поиск')
-                    self.searches = self.vk_tools.search_users(self.params, self.offset)
-                    lenght = len(self.searches)
+
+                    if not self.searches:
+                        self.offset += 10
+                        self.searches = self.vk_tools.search_users(self.params, self.offset)
                     search = self.searches.pop()
 
                     while check_user(engine, event.user_id, search['id']) is True or self.vk_tools.get_photos(search['id']) is None:
                         if self.searches:
                             search = self.searches.pop()
-
                         else:
-                            self.offset += lenght
+                            self.offset += 10
                             self.searches = self.vk_tools.search_users(self.params, self.offset)
                             search = self.searches.pop()
 
